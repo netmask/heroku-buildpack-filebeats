@@ -35,7 +35,7 @@ download="curl -sLO"
 extract="$tar -C $BUILD_DIR --wildcards -f"
 verify="sha1sum --check --warn"
 
-echo "-----> Installing Logstash..."
+echo "-----> Installing Filebeats..."
 
 $mkdir ${INIT_SCRIPT%/*}
 $mkdir $CACHE_DIR
@@ -50,3 +50,7 @@ $extract $CACHE_DIR/$FILEBEAT_PACKAGE
 
 echo "Exporting PATH" | indent
 echo 'export PATH="$PATH:'${FILEBEAT_DIR##*/}'"' > $INIT_SCRIPT
+echo 'runing setup'
+cd /app
+$FILEBEAT_DIR/filebeat setup 
+echo "done"
