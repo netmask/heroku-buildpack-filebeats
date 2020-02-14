@@ -43,23 +43,10 @@ $mkdir $CACHE_DIR
 if [ ! -f "$CACHE_DIR/$FILEBEAT_PACKAGE" ]; then
   echo "downloading $DOWNLOAD_URL" | indent
   $download $DOWNLOAD_URL
-
-  echo "verifying against ${DOWNLOAD_URL}.sha1.txt" | indent
-  $download "${DOWNLOAD_URL}.sha1.txt"
-  $verify "${FILEBEAT_PACKAGE}.sha1.txt"
-
-  if [ $? -eq 0 ]; then
-    mv $FILEBEAT_PACKAGE $CACHE_DIR
-  else
-    exit 1
-  fi
+  mv $FILEBEAT_PACKAGE $CACHE_DIR
 fi
 
 $extract $CACHE_DIR/$FILEBEAT_PACKAGE
-echo "Deleting built in configuration file" | indent
-rm -rf $FILEBEAT_DIR/filebeat.yml
-echo "Copy filebeat.yml" | indent
-cp filebeat.yml $FILEBEAT_DIR
 
 echo "Exporting PATH" | indent
 echo 'export PATH="$PATH:'${FILEBEAT_DIR##*/}'"' > $INIT_SCRIPT
