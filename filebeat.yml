@@ -1,0 +1,25 @@
+filebeat.inputs:
+
+- type: log
+  enabled: true
+  paths:
+    - /app//log/*
+
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+setup.template.settings:
+  index.number_of_shards: 1
+
+
+fields:
+  environment: '${BASE_URL}'
+
+
+cloud.id: "${ELASTIC_CLOUD_ID}"
+cloud.auth: "elastic:${ELASTIC_CLOUD_PASSWORD}"
+
+
+

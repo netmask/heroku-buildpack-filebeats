@@ -1,0 +1,65 @@
+#!/bin/sh
+
+indent() {
+  sed -u 's/^/       /'
+}
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+INIT_SCRIPT="$BUILD_DIR/.profile.d/filebeat.sh"
+
+
+if [ -f "$ENV_DIR/DOWNLOAD_URL" ]; then
+  DOWNLOAD_URL=$(cat $ENV_DIR/DOWNLOAD_URL)
+else
+  DOWNLOAD_URL="https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.5.2-linux-x86_64.tar.gz"
+fi
+
+FILEBEAT_PACKAGE=${DOWNLOAD_URL##*/}
+
+case ${FILEBEAT_PACKAGE} in
+  *.tar.gz)
+    FILEBEAT_DIR="$BUILD_DIR/${FILEBEAT_PACKAGE%%.tar.gz}"
+    tar="tar xz"
+    ;;
+  *)
+    echo "Only tar.gz is supported: $FILEBEAT_PACKAGE" | indent
+    exit 1
+    ;;
+esac
+
+mkdir="mkdir -p"
+download="curl -sLO"
+extract="$tar -C $BUILD_DIR --wildcards -f"
+verify="sha1sum --check --warn"
+
+echo "-----> Installing Logstash..."
+
+$mkdir ${INIT_SCRIPT%/*}
+$mkdir $CACHE_DIR
+
+if [ ! -f "$CACHE_DIR/$FILEBEAT_PACKAGE" ]; then
+  echo "downloading $DOWNLOAD_URL" | indent
+  $download $DOWNLOAD_URL
+
+  echo "verifying against ${DOWNLOAD_URL}.sha1.txt" | indent
+  $download "${DOWNLOAD_URL}.sha1.txt"
+  $verify "${FILEBEAT_PACKAGE}.sha1.txt"
+
+  if [ $? -eq 0 ]; then
+    mv $FILEBEAT_PACKAGE $CACHE_DIR
+  else
+    exit 1
+  fi
+fi
+
+$extract $CACHE_DIR/$FILEBEAT_PACKAGE
+echo "Deleting built in configuration file" | indent
+rm -rf $FILEBEAT_DIR/filebeat.yml
+echo "Copy filebeat.yml" | indent
+cp filebeat.yml $FILEBEAT_DIR
+
+echo "Exporting PATH" | indent
+echo 'export PATH="$PATH:'${FILEBEAT_DIR##*/}'"' > $INIT_SCRIPT

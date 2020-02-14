@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "filebeats"
+exit 0
